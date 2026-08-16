@@ -3,6 +3,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import confusion_matrix
 
 
 df = pd.read_csv("data/kc1.csv")
@@ -23,12 +24,12 @@ print("Testing features:", X_test.shape)
 print("Training target:", y_train.shape)
 print("Testing target:", y_test.shape)
 
-model = LogisticRegression(max_iter=1000)
+model = LogisticRegression(    max_iter=1000,
+    class_weight="balanced")
 
 model.fit(X_train, y_train)
 
 y_pred = model.predict(X_test)
-print(y_pred);
 
 print("\nActual:")
 print(y_test[:10].to_numpy())
@@ -49,3 +50,8 @@ f1 = f1_score(y_test, y_pred)
 print("\nPrecision:", precision)
 print("Recall:", recall)
 print("F1 Score:", f1)
+
+cm = confusion_matrix(y_test, y_pred)
+
+print("\nConfusion Matrix:")
+print(cm)
