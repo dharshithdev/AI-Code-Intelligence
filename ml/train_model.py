@@ -4,7 +4,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.metrics import confusion_matrix
-
+from sklearn.ensemble import RandomForestClassifier
 
 df = pd.read_csv("data/kc1.csv")
 
@@ -24,8 +24,11 @@ print("Testing features:", X_test.shape)
 print("Training target:", y_train.shape)
 print("Testing target:", y_test.shape)
 
-model = LogisticRegression(    max_iter=1000,
-    class_weight="balanced")
+model = RandomForestClassifier(
+    n_estimators=200,
+    class_weight="balanced",
+    random_state=42
+)
 
 model.fit(X_train, y_train)
 
