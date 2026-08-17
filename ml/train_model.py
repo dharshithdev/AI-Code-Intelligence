@@ -9,6 +9,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from xgboost import XGBClassifier
 from sklearn.model_selection import GridSearchCV
+from sklearn.feature_selection import SelectFromModel
+
 
 df = pd.read_csv("data/kc1.csv")
 
@@ -23,59 +25,40 @@ X_train, X_test, y_train, y_test = train_test_split(
     stratify=y
 )
 
-print("Training features:", X_train.shape)
-print("Testing features:", X_test.shape)
-print("Training target:", y_train.shape)
-print("Testing target:", y_test.shape)
+#print("Training features:", X_train.shape)
+#print("Testing features:", X_test.shape)
+#print("Training target:", y_train.shape)
+#print("Testing target:", y_test.shape)
 
-model = RandomForestClassifier(
+selector_model = RandomForestClassifier(
+    n_estimators=200,
     class_weight="balanced",
     random_state=42
 )
 
-param_grid = {
-    "n_estimators": [100, 200, 300],
-    "max_depth": [None, 5, 10]
-}
+selector_model.fit(X_train, y_train)
 
-grid_search = GridSearchCV(
-    model,
-    param_grid,
-    scoring="f1",
-    cv=5,
-    n_jobs=-1
+selector = SelectFromModel(
+    selector_model,
+    threshold="mean",
+    prefit=True
 )
 
-grid_search.fit(X_train, y_train)
+X_train_selected = selector.transform(X_train)
+X_test_selected = selector.transform(X_test)
 
-model = grid_search.best_estimator_
+print("Original features:", X_train.shape[1])
+print("Selected features:", X_train_selected.shape[1])
 
-importances = model.feature_importances_
+model = RandomForestClassifier(
+    n_estimators=200,
+    class_weight="balanced",
+    random_state=42
+)
 
-feature_importance = pd.Series(
-    importances,
-    index=X.columns
-).sort_values(ascending=False)
+model.fit(X_train_selected, y_train)
 
-print("\nFeature Importance:")
-print(feature_importance)
-
-print("\nBest parameters:")
-print(grid_search.best_params_)
-
-y_pred = model.predict(X_test)
-
-print("\nActual:")
-print(y_test[:10].to_numpy())
-
-print("\nPredicted:")
-print(y_pred[:10])
-accuracy = accuracy_score(y_test, y_pred)
-
-print("\nAccuracy:", accuracy)
-
-print("\nPredicted distribution:")
-print(pd.Series(y_pred).value_counts())
+y_pred = model.predict(X_test_selected)
 
 precision = precision_score(y_test, y_pred)
 recall = recall_score(y_test, y_pred)
