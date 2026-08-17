@@ -7,6 +7,8 @@ from sklearn.metrics import confusion_matrix
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
+from xgboost import XGBClassifier
+from sklearn.model_selection import GridSearchCV
 
 df = pd.read_csv("data/kc1.csv")
 
@@ -26,15 +28,40 @@ print("Testing features:", X_test.shape)
 print("Training target:", y_train.shape)
 print("Testing target:", y_test.shape)
 
-model = Pipeline([
-    ("scaler", StandardScaler()),
-    ("classifier", LogisticRegression(
-        max_iter=1000,
-        class_weight="balanced"
-    ))
-])
+model = RandomForestClassifier(
+    class_weight="balanced",
+    random_state=42
+)
 
-model.fit(X_train, y_train)
+param_grid = {
+    "n_estimators": [100, 200, 300],
+    "max_depth": [None, 5, 10]
+}
+
+grid_search = GridSearchCV(
+    model,
+    param_grid,
+    scoring="f1",
+    cv=5,
+    n_jobs=-1
+)
+
+grid_search.fit(X_train, y_train)
+
+model = grid_search.best_estimator_
+
+importances = model.feature_importances_
+
+feature_importance = pd.Series(
+    importances,
+    index=X.columns
+).sort_values(ascending=False)
+
+print("\nFeature Importance:")
+print(feature_importance)
+
+print("\nBest parameters:")
+print(grid_search.best_params_)
 
 y_pred = model.predict(X_test)
 
