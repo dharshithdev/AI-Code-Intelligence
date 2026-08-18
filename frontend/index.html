@@ -344,7 +344,9 @@
 </footer>
 
 <script>
-    const API_URL = "http://127.0.0.1:5000";
+    const API_URL = window.location.hostname === "localhost"
+    ? "http://127.0.0.1:5000"
+    : "https://ai-code-intelligence-api.onrender.com";
     const fileInput = document.getElementById("fileInput");
     const analyzeButton = document.getElementById("analyzeButton");
     const result = document.getElementById("result");
