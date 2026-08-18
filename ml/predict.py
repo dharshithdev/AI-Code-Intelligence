@@ -1,41 +1,42 @@
+import sys
 import joblib
 import pandas as pd
+from extract import extract_metrics
+
+if len(sys.argv) != 2:
+    print("Usage: python predict.py <cpp_file>")
+    sys.exit(1)
+
+file_path = sys.argv[1]
+
+try:
+    with open(file_path, "r", encoding="utf-8") as file:
+        code = file.read()
+except FileNotFoundError:
+    print(f"File not found: {file_path}")
+    sys.exit(1)
 
 model = joblib.load("defect_model.pkl")
 
-sample = pd.DataFrame([{
-    "cbo": 20,
-    "wmc": 50,
-    "dit": 2,
-    "rfc": 60,
-    "lcom": 500,
-    "totalMethods": 25,
-    "totalFields": 10,
-    "nosi": 5,
-    "loc": 200,
-    "returnQty": 10,
-    "loopQty": 3,
-    "comparisonsQty": 8,
-    "tryCatchQty": 1,
-    "parenthesizedExpsQty": 5,
-    "stringLiteralsQty": 15,
-    "numbersQty": 10,
-    "assignmentsQty": 25,
-    "mathOperationsQty": 8,
-    "variablesQty": 30,
-    "maxNestedBlocks": 3,
-    "uniqueWordsQty": 100
-}])
+metrics = extract_metrics(code)
 
-probability = model.predict_proba(sample)[0][1]
+features = [
+    "cbo", "wmc", "dit", "rfc", "lcom",
+    "totalMethods", "totalFields", "nosi", "loc",
+    "returnQty", "loopQty", "comparisonsQty", "tryCatchQty",
+    "parenthesizedExpsQty", "stringLiteralsQty", "numbersQty",
+    "assignmentsQty", "mathOperationsQty", "variablesQty",
+    "maxNestedBlocks", "uniqueWordsQty"
+]
 
-threshold = 0.45
+input_data = pd.DataFrame([[metrics[feature] for feature in features]], columns=features)
 
-prediction = probability >= threshold
+probability = model.predict_proba(input_data)[0][1]
 
-print("Defect Probability:", round(probability * 100, 2), "%")
-
-if prediction:
-    print("Prediction: DEFECTIVE")
+if probability >= 0.45:
+    prediction = "DEFECTIVE"
 else:
-    print("Prediction: NON-DEFECTIVE")
+    prediction = "NON-DEFECTIVE"
+
+print(f"Defect Probability: {probability * 100:.2f}%")
+print(f"Prediction: {prediction}")

@@ -4,38 +4,44 @@ import tree_sitter_cpp as tscpp
 CPP_LANGUAGE = Language(tscpp.language())
 parser = Parser(CPP_LANGUAGE)
 
+FEATURES = [
+    "cbo", "wmc", "dit", "rfc", "lcom",
+    "totalMethods", "totalFields", "nosi", "loc",
+    "returnQty", "loopQty", "comparisonsQty", "tryCatchQty",
+    "parenthesizedExpsQty", "stringLiteralsQty", "numbersQty",
+    "assignmentsQty", "mathOperationsQty", "variablesQty",
+    "maxNestedBlocks", "uniqueWordsQty"
+]
+
 def extract_metrics(code):
     tree = parser.parse(code.encode("utf-8"))
     root = tree.root_node
 
-    metrics = {
-        "loc": len(code.splitlines()),
-        "totalMethods": 0,
-        "loopQty": 0,
-        "comparisonsQty": 0,
-        "tryCatchQty": 0,
-        "returnQty": 0,
-        "assignmentsQty": 0,
-        "mathOperationsQty": 0
-    }
+    metrics = {feature: 0 for feature in FEATURES}
 
-    def walk(node):
+    metrics["loc"] = len(code.splitlines())
+
+    words = set()
+    max_depth = 0
+
+    def walk(node, depth=0):
+        nonlocal max_depth
+
+        max_depth = max(max_depth, depth)
+
         node_type = node.type
 
         if node_type == "function_definition":
             metrics["totalMethods"] += 1
+            metrics["rfc"] += 1
 
-        elif node_type in (
-            "for_statement",
-            "while_statement",
-            "do_statement"
-        ):
+        elif node_type == "field_declaration":
+            metrics["totalFields"] += 1
+
+        elif node_type in ("for_statement", "while_statement", "do_statement"):
             metrics["loopQty"] += 1
 
-        elif node_type in (
-            "if_statement",
-            "switch_statement"
-        ):
+        elif node_type in ("if_statement", "switch_statement"):
             metrics["comparisonsQty"] += 1
 
         elif node_type == "try_statement":
@@ -47,34 +53,53 @@ def extract_metrics(code):
         elif node_type == "assignment_expression":
             metrics["assignmentsQty"] += 1
 
-        elif node_type in (
-            "additive_expression",
-            "multiplicative_expression"
-        ):
+        elif node_type in ("additive_expression", "multiplicative_expression"):
             metrics["mathOperationsQty"] += 1
 
+        elif node_type == "parenthesized_expression":
+            metrics["parenthesizedExpsQty"] += 1
+
+        elif node_type == "string_literal":
+            metrics["stringLiteralsQty"] += 1
+
+        elif node_type == "number_literal":
+            metrics["numbersQty"] += 1
+
+        elif node_type == "identifier":
+            metrics["variablesQty"] += 1
+
+            text = code[node.start_byte:node.end_byte]
+            words.add(text)
+
+        elif node_type == "compound_statement":
+            max_depth = max(max_depth, depth)
+
         for child in node.children:
-            walk(child)
+            walk(child, depth + 1)
 
     walk(root)
+
+    metrics["uniqueWordsQty"] = len(words)
+    metrics["maxNestedBlocks"] = max_depth
+
+    metrics["wmc"] = (
+        metrics["totalMethods"]
+        + metrics["comparisonsQty"]
+        + metrics["loopQty"]
+    )
+
+    metrics["nosi"] = metrics["totalMethods"]
+
+    metrics["dit"] = 1
+    metrics["cbo"] = metrics["totalMethods"] + metrics["totalFields"]
+    metrics["lcom"] = 0
 
     return metrics
 
 
 if __name__ == "__main__":
-    code = """
-    int calculate(int x) {
-        int result = 0;
-
-        for (int i = 0; i < x; i++) {
-            if (i > 5) {
-                result = result + i;
-            }
-        }
-
-        return result;
-    }
-    """
+    with open("test.cpp", "r", encoding="utf-8") as file:
+        code = file.read()
 
     metrics = extract_metrics(code)
 
