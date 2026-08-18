@@ -1,31 +1,17 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.metrics import precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
-from sklearn.model_selection import GridSearchCV
-from sklearn.model_selection import cross_val_score
 
 df = pd.read_csv("data/kc1.csv")
 
 X = df.drop("defects", axis=1)
 y = df["defects"]
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
-    test_size=0.2,
-    random_state=42,
-    stratify=y
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, 
+        stratify=y
 )
-
-#print("Training features:", X_train.shape)
-#print("Testing features:", X_test.shape)
-#print("Training target:", y_train.shape)
-#print("Testing target:", y_test.shape)
 
 model = Pipeline([
     ("classifier", RandomForestClassifier(
@@ -52,29 +38,34 @@ grid_search.fit(X_train, y_train)
 
 model = grid_search.best_estimator_
 
-cv_scores = cross_val_score(
-    model,
-    X_train,
-    y_train,
-    cv=5,
-    scoring="f1"
-)
-
-print("\nCross-validation F1 scores:")
-print(cv_scores)
-
-print("\nMean CV F1:", cv_scores.mean())
-
+print("\nBest CV F1:", grid_search.best_score_)
 print("\nBest parameters:")
 print(grid_search.best_params_)
 
-y_pred = model.predict(X_test)
+probabilities = model.predict_proba(X_test)[:, 1]
 
-print("\nPrecision:", precision_score(y_test, y_pred))
-print("Recall:", recall_score(y_test, y_pred))
-print("F1 Score:", f1_score(y_test, y_pred))
+threshold = 0.5
+y_pred = probabilities >= threshold
+
+precision = precision_score(y_test, y_pred)
+recall = recall_score(y_test, y_pred)
+f1 = f1_score(y_test, y_pred)
+
+print("\nPrecision:", precision)
+print("Recall:", recall)
+print("F1 Score:", f1)
 
 cm = confusion_matrix(y_test, y_pred)
 
 print("\nConfusion Matrix:")
 print(cm)
+
+importance = model.named_steps["classifier"].feature_importances_
+
+feature_importance = pd.Series(
+    importance,
+    index=X.columns
+).sort_values(ascending=False)
+
+print("\nFeature Importance:")
+print(feature_importance)
