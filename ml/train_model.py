@@ -73,6 +73,27 @@ test_probabilities = model.predict_proba(X_test)[:, 1]
 
 y_pred = test_probabilities >= best_threshold
 
+false_negatives = X_test[
+    (y_test == True) & (y_pred == False)
+]
+
+false_negative_data = X_test.copy()
+
+false_negative_data["actual"] = y_test
+false_negative_data["predicted"] = y_pred
+false_negative_data["probability"] = test_probabilities
+
+false_negative_data = false_negative_data[
+    (false_negative_data["actual"] == True) &
+    (false_negative_data["predicted"] == False)
+]
+
+print("\nFalse Negative Details:")
+print(false_negative_data)
+
+print("\nFalse Negatives:")
+print(false_negatives)
+
 test_precision = precision_score(y_test, y_pred)
 test_recall = recall_score(y_test, y_pred)
 test_f1 = f1_score(y_test, y_pred)
