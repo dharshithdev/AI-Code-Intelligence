@@ -13,7 +13,7 @@ from extract import extract_metrics
 app = Flask(__name__)
 CORS(app, origins=[
     "http://127.0.0.1:5500",
-    "https://ai-code-intelligence.vercel.app/"
+    "https://ai-code-intelligence.vercel.app"
 ])
 
 MODEL_PATH = os.path.join(ML_FOLDER, "defect_model.pkl")
