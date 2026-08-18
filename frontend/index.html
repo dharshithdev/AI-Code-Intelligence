@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Code Intelligence</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #1f2937;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        header {
+            margin-bottom: 35px;
+        }
+
+        header h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: #6b7280;
+        }
+
+        .upload-card {
+            background: white;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 45px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .upload-card h2 {
+            margin-bottom: 10px;
+        }
+
+        .upload-card p {
+            color: #6b7280;
+            margin-bottom: 20px;
+        }
+
+        #fileInput {
+            margin-bottom: 20px;
+        }
+
+        button {
+            display: block;
+            margin: auto;
+            padding: 12px 28px;
+            border: none;
+            border-radius: 7px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        #result {
+            display: none;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .card h3 {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+
+        .card .value {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .metrics-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+        }
+
+        .metrics-card h2 {
+            margin-bottom: 20px;
+        }
+
+        .metric {
+            margin-bottom: 18px;
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 7px;
+            font-size: 14px;
+        }
+
+        .bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: #2563eb;
+            border-radius: 10px;
+        }
+
+        .defective {
+            color: #dc2626;
+        }
+
+        .non-defective {
+            color: #16a34a;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #6b7280;
+        }
+
+        @media (max-width: 700px) {
+            .summary {
+                grid-template-columns: 1fr;
+            }
+
+            .upload-card {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <header>
+            <h1>AI Code Intelligence</h1>
+            <p>Analyze C++ code for potential defects using machine learning.</p>
+        </header>
+
+        <div class="upload-card">
+            <h2>Upload C++ Code</h2>
+            <p>Select a .cpp, .cc or .cxx file to analyze.</p>
+
+            <input type="file" id="fileInput" accept=".cpp,.cc,.cxx">
+
+            <button id="analyzeButton">Analyze Code</button>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            Analyzing code...
+        </div>
+
+        <div id="result">
+
+            <div class="summary">
+
+                <div class="card">
+                    <h3>FILE</h3>
+                    <div class="value" id="filename">-</div>
+                </div>
+
+                <div class="card">
+                    <h3>DEFECT PROBABILITY</h3>
+                    <div class="value" id="probability">-</div>
+                </div>
+
+                <div class="card">
+                    <h3>PREDICTION</h3>
+                    <div class="value" id="prediction">-</div>
+                </div>
+
+            </div>
+
+            <div class="metrics-card">
+                <h2>Code Metrics</h2>
+                <div id="metrics"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const fileInput = document.getElementById("fileInput");
+        const analyzeButton = document.getElementById("analyzeButton");
+        const result = document.getElementById("result");
+        const loading = document.getElementById("loading");
+        const filename = document.getElementById("filename");
+        const probability = document.getElementById("probability");
+        const prediction = document.getElementById("prediction");
+        const metricsContainer = document.getElementById("metrics");
+
+        analyzeButton.addEventListener("click", async () => {
+
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please select a C++ file.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            result.style.display = "none";
+            loading.style.display = "block";
+            analyzeButton.disabled = true;
+
+            try {
+
+                const response = await fetch("http://127.0.0.1:5000/analyze", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    alert(data.error);
+                    return;
+                }
+
+                filename.textContent = data.filename;
+                probability.textContent = `${data.probability}%`;
+                prediction.textContent = data.prediction;
+
+                prediction.className =
+                    data.prediction === "DEFECTIVE"
+                        ? "value defective"
+                        : "value non-defective";
+
+                metricsContainer.innerHTML = "";
+
+                for (const [name, value] of Object.entries(data.metrics)) {
+
+                    const metric = document.createElement("div");
+                    metric.className = "metric";
+
+                    const percentage = Math.min(Number(value), 100);
+
+                    metric.innerHTML = `
+                        <div class="metric-header">
+                            <span>${name}</span>
+                            <strong>${value}</strong>
+                        </div>
+
+                        <div class="bar">
+                            <div class="bar-fill" style="width: ${percentage}%"></div>
+                        </div>
+                    `;
+
+                    metricsContainer.appendChild(metric);
+                }
+
+                result.style.display = "block";
+
+            } catch (error) {
+
+                console.error(error);
+                alert("Could not connect to the backend.");
+
+            } finally {
+
+                loading.style.display = "none";
+                analyzeButton.disabled = false;
+
+            }
+        });
+    </script>
+
+</body>
+</html>
