@@ -1,0 +1,8 @@
+Flask
+flask-cors
+pandas
+numpy
+scikit-learn
+joblib
+tree-sitter
+tree-sitter-cpp

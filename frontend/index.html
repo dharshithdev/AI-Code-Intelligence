@@ -344,6 +344,7 @@
 </footer>
 
 <script>
+    const API_URL = "http://127.0.0.1:5000";
     const fileInput = document.getElementById("fileInput");
     const analyzeButton = document.getElementById("analyzeButton");
     const result = document.getElementById("result");
@@ -372,7 +373,7 @@
         try {
 
             const response = await fetch(
-                "http://127.0.0.1:5000/analyze",
+                `${API_URL}/analyze`,
                 {
                     method: "POST",
                     body: formData
