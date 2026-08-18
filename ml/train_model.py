@@ -6,6 +6,8 @@ from sklearn.metrics import confusion_matrix
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import cross_val_score
 
 df = pd.read_csv("data/kc1.csv")
 
@@ -27,13 +29,45 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 model = Pipeline([
     ("classifier", RandomForestClassifier(
-        n_estimators=200,
         class_weight="balanced",
         random_state=42
     ))
 ])
 
-model.fit(X_train, y_train)
+param_grid = {
+    "classifier__n_estimators": [100, 200, 300],
+    "classifier__max_depth": [None, 5, 10],
+    "classifier__min_samples_split": [2, 5, 10]
+}
+
+grid_search = GridSearchCV(
+    model,
+    param_grid,
+    scoring="f1",
+    cv=5,
+    n_jobs=-1
+)
+
+grid_search.fit(X_train, y_train)
+
+model = grid_search.best_estimator_
+
+cv_scores = cross_val_score(
+    model,
+    X_train,
+    y_train,
+    cv=5,
+    scoring="f1"
+)
+
+print("\nCross-validation F1 scores:")
+print(cv_scores)
+
+print("\nMean CV F1:", cv_scores.mean())
+
+print("\nBest parameters:")
+print(grid_search.best_params_)
+
 y_pred = model.predict(X_test)
 
 print("\nPrecision:", precision_score(y_test, y_pred))
