@@ -3,6 +3,8 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import precision_score, recall_score, f1_score, confusion_matrix
+import numpy as np
+from sklearn.model_selection import cross_val_predict
 
 df = pd.read_csv("data/kc1.csv")
 
@@ -42,25 +44,42 @@ grid_search.fit(X_train, y_train)
 
 model = grid_search.best_estimator_
 
-print("\nBest CV F1:", grid_search.best_score_)
-
-print("\nBest parameters:")
-print(grid_search.best_params_)
-
 probabilities = model.predict_proba(X_test)[:, 1]
 
-threshold = 0.5
+cv_probabilities = cross_val_predict(
+    model,
+    X_train,
+    y_train,
+    cv=5,
+    method="predict_proba",
+    n_jobs=-1
+)[:, 1]
 
-y_pred = probabilities >= threshold
+best_threshold = 0
+best_f1 = 0
 
-print("\nDefect probabilities:")
-print(probabilities[:10])
+for threshold in np.arange(0.1, 0.91, 0.05):
+    cv_pred = cv_probabilities >= threshold
+    f1 = f1_score(y_train, cv_pred)
 
-print("\nPrecision:", precision_score(y_test, y_pred))
-print("Recall:", recall_score(y_test, y_pred))
-print("F1 Score:", f1_score(y_test, y_pred))
+    if f1 > best_f1:
+        best_f1 = f1
+        best_threshold = threshold
 
-cm = confusion_matrix(y_test, y_pred)
+print("\nBest CV threshold:", best_threshold)
+print("Best CV F1:", best_f1)
+
+test_probabilities = model.predict_proba(X_test)[:, 1]
+
+y_pred = test_probabilities >= best_threshold
+
+test_precision = precision_score(y_test, y_pred)
+test_recall = recall_score(y_test, y_pred)
+test_f1 = f1_score(y_test, y_pred)
+
+print("\nFinal Test Precision:", test_precision)
+print("Final Test Recall:", test_recall)
+print("Final Test F1:", test_f1)
 
 print("\nConfusion Matrix:")
-print(cm)
+print(confusion_matrix(y_test, y_pred))
