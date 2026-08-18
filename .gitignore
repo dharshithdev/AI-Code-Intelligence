@@ -12,7 +12,6 @@ env/
 .ipynb_checkpoints/
 
 # ML artifacts
-*.pkl
 *.joblib
 
 # Environment variables
