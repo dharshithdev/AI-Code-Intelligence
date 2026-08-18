@@ -6,3 +6,4 @@ scikit-learn
 joblib
 tree-sitter
 tree-sitter-cpp
+gunicorn
