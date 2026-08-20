@@ -19,7 +19,7 @@ const Header = () => {
   const navItems = [
     { name: 'Analyzer', icon: FiCode, id: 'analyzer' },
     { name: 'About', icon: FiInfo, id: 'about' },
-    { name: 'GitHub', icon: FiGithub, id: 'github' },
+    { name: 'GitHub', icon: FiGithub, id: 'https://github.com/dharshithdev/AI-Code-Intelligence.git' },
   ];
 
   const handleNavClick = (item) => {
