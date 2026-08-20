@@ -16,30 +16,37 @@ const Header = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navItems = [
-    { name: 'Analyzer', icon: FiCode, id: 'analyzer' },
-    { name: 'About', icon: FiInfo, id: 'about' },
-    { name: 'GitHub', icon: FiGithub, id: 'https://github.com/dharshithdev/AI-Code-Intelligence.git' },
-  ];
+const navItems = [
+  { name: 'Analyzer', icon: FiCode, id: 'analyzer', type: 'scroll' },
+  { name: 'About', icon: FiInfo, id: 'about', type: 'scroll' },
+  { name: 'GitHub', icon: FiGithub, path: 'https://github.com/dharshithdev/AI-Code-Intelligence.git', type: 'external' },
+];
 
-  const handleNavClick = (item) => {
-    setIsOpen(false);
-    // If it's a section on the page, scroll to it
-    if (location.pathname === '/') {
+const handleNavClick = (item) => {
+  setIsOpen(false);
+  
+  // If it's an external link (GitHub)
+  if (item.type === 'external') {
+    window.open(item.path, '_blank');
+    return;
+  }
+  
+  // If it's a scroll link (Analyzer, About)
+  if (location.pathname === '/') {
+    const element = document.getElementById(item.id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  } else {
+    navigate('/');
+    setTimeout(() => {
       const element = document.getElementById(item.id);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth' });
       }
-    } else {
-      navigate('/');
-      setTimeout(() => {
-        const element = document.getElementById(item.id);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 100);
-    }
-  };
+    }, 100);
+  }
+};
 
   return (
     <>
