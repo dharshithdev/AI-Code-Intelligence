@@ -5,6 +5,9 @@ const API_URL =
         : "https://ai-code-intelligence-qqjc.onrender.com";
 
 const fileInput = document.getElementById("fileInput");
+const browseButton = document.getElementById("browseButton");
+const dropZone = document.getElementById("dropZone");
+const selectedFile = document.getElementById("selectedFile");
 const analyzeButton = document.getElementById("analyzeButton");
 const result = document.getElementById("result");
 const loading = document.getElementById("loading");
@@ -23,17 +26,99 @@ const couplingFill = document.getElementById("couplingFill");
 const nestingHealth = document.getElementById("nestingHealth");
 const nestingFill = document.getElementById("nestingFill");
 
+function isValidFile(file) {
+    if (!file) {
+        return false;
+    }
+
+    const extension = file.name
+        .split(".")
+        .pop()
+        .toLowerCase();
+
+    return ["cpp", "cc", "cxx"].includes(extension);
+}
+
+function setSelectedFile(file) {
+    if (!isValidFile(file)) {
+        alert("Please select a C++ file (.cpp, .cc, or .cxx).");
+        fileInput.value = "";
+        selectedFile.textContent = "No file selected";
+        return;
+    }
+
+    selectedFile.textContent = `Selected: ${file.name}`;
+}
+
+browseButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    fileInput.click();
+});
+
+dropZone.addEventListener("click", (event) => {
+    if (
+        event.target === browseButton ||
+        event.target === analyzeButton ||
+        event.target === fileInput
+    ) {
+        return;
+    }
+
+    fileInput.click();
+});
+
+fileInput.addEventListener("change", () => {
+    const file = fileInput.files[0];
+    setSelectedFile(file);
+});
+
+dropZone.addEventListener("dragover", (event) => {
+    event.preventDefault();
+    dropZone.classList.add("drag-over");
+});
+
+dropZone.addEventListener("dragleave", (event) => {
+    if (!dropZone.contains(event.relatedTarget)) {
+        dropZone.classList.remove("drag-over");
+    }
+});
+
+dropZone.addEventListener("drop", (event) => {
+    event.preventDefault();
+
+    dropZone.classList.remove("drag-over");
+
+    const file = event.dataTransfer.files[0];
+
+    if (!isValidFile(file)) {
+        alert("Please drop a C++ file (.cpp, .cc, or .cxx).");
+        return;
+    }
+
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    fileInput.files = dataTransfer.files;
+
+    setSelectedFile(file);
+});
+
 function setHealth(label, fill, score) {
-    const health = Math.max(0, Math.round(100 - score));
+    const health = Math.max(
+        0,
+        Math.round(100 - score)
+    );
+
     label.textContent = `${health}%`;
     fill.style.width = `${health}%`;
 }
 
 function calculateHealth(metrics) {
     const complexityScore = Math.min(
-        (Number(metrics.wmc) +
+        (
+            Number(metrics.wmc) +
             Number(metrics.loopQty) +
-            Number(metrics.comparisonsQty)) * 2,
+            Number(metrics.comparisonsQty)
+        ) * 2,
         100
     );
 
@@ -82,6 +167,7 @@ function displayMetrics(metrics) {
 
     for (const [name, value] of Object.entries(metrics)) {
         const metric = document.createElement("div");
+
         metric.className = "metric";
 
         const percentage = Math.min(
@@ -111,11 +197,17 @@ analyzeButton.addEventListener("click", async () => {
     const file = fileInput.files[0];
 
     if (!file) {
-        alert("Please select a C++ file.");
+        alert("Please select or drop a C++ file first.");
+        return;
+    }
+
+    if (!isValidFile(file)) {
+        alert("Please select a C++ file (.cpp, .cc, or .cxx).");
         return;
     }
 
     const formData = new FormData();
+
     formData.append("file", file);
 
     result.style.display = "none";
@@ -140,11 +232,14 @@ analyzeButton.addEventListener("click", async () => {
 
         filename.textContent = data.filename;
 
-        probability.textContent = `${data.probability}%`;
+        probability.textContent =
+            `${data.probability}%`;
 
-        probabilityFill.style.width = `${data.probability}%`;
+        probabilityFill.style.width =
+            `${data.probability}%`;
 
-        prediction.textContent = data.prediction;
+        prediction.textContent =
+            data.prediction;
 
         prediction.className =
             data.prediction === "DEFECTIVE"

@@ -18,6 +18,7 @@
         </nav>
     </div>
 </header>
+
 <section class="hero">
     <h1>Analyze Your Code with <span>AI</span></h1>
     <p>
@@ -25,27 +26,44 @@
         analyze its code metrics and estimate the probability of defects.
     </p>
 </section>
+
 <main class="container">
-    <div class="upload-card">
+    <div class="upload-card" id="dropZone">
         <div class="upload-icon">📄</div>
         <h2>Upload C++ Source Code</h2>
-        <p>Supported formats: .cpp, .cc, .cxx</p>
+        <p>Drag & drop your file here or click to browse</p>
+
         <input
             type="file"
             id="fileInput"
             accept=".cpp,.cc,.cxx"
+            hidden
         >
-        <button id="analyzeButton">Analyze Code</button>
+
+        <button type="button" id="browseButton">
+            Choose File
+        </button>
+
+        <p id="selectedFile" class="selected-file">
+            No file selected
+        </p>
+
+        <button id="analyzeButton">
+            Analyze Code
+        </button>
     </div>
+
     <div id="loading" class="loading" style="display: none;">
         Analyzing your code...
     </div>
+
     <div id="result" style="display: none;">
         <div class="summary">
             <div class="card">
                 <h3>FILE</h3>
                 <div class="value" id="filename">-</div>
             </div>
+
             <div class="card probability-card">
                 <h3>DEFECT PROBABILITY</h3>
                 <div class="probability-value" id="probability">-</div>
@@ -53,16 +71,20 @@
                     <div id="probability-fill"></div>
                 </div>
             </div>
+
             <div class="card">
                 <h3>PREDICTION</h3>
                 <div class="value" id="prediction">-</div>
             </div>
         </div>
+
         <div class="health-card">
             <h2>Code Health</h2>
+
             <p class="health-description">
                 An overview of the structural characteristics of the analyzed code.
             </p>
+
             <div class="health-grid">
                 <div class="health-item">
                     <div class="health-header">
@@ -73,6 +95,7 @@
                         <div id="complexityFill"></div>
                     </div>
                 </div>
+
                 <div class="health-item">
                     <div class="health-header">
                         <span>Code Size</span>
@@ -82,6 +105,7 @@
                         <div id="sizeFill"></div>
                     </div>
                 </div>
+
                 <div class="health-item">
                     <div class="health-header">
                         <span>Coupling</span>
@@ -91,6 +115,7 @@
                         <div id="couplingFill"></div>
                     </div>
                 </div>
+
                 <div class="health-item">
                     <div class="health-header">
                         <span>Nesting</span>
@@ -102,18 +127,24 @@
                 </div>
             </div>
         </div>
+
         <div class="metrics-card">
             <h2>Code Metrics</h2>
             <div id="metrics"></div>
         </div>
     </div>
 </main>
+
 <footer>
     <p>
         Built with <strong>Python, Flask, Tree-sitter & Machine Learning</strong>
     </p>
-    <p class="footer-title">AI Code Intelligence</p>
+    <p class="footer-title">
+        AI Code Intelligence
+    </p>
 </footer>
+
 <script src="script.js" defer></script>
 </body>
 </html>
+

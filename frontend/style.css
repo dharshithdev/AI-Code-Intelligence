@@ -83,11 +83,20 @@ nav a:hover {
     border-radius: 16px;
     padding: 50px 30px;
     text-align: center;
-    transition: 0.2s;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        transform 0.2s ease;
 }
 
 .upload-card:hover {
     border-color: #2563eb;
+}
+
+.upload-card.drag-over {
+    border-color: #2563eb;
+    background: #eff6ff;
+    transform: scale(1.01);
 }
 
 .upload-icon {
@@ -104,8 +113,19 @@ nav a:hover {
     margin-bottom: 25px;
 }
 
+#browseButton {
+    margin-bottom: 10px;
+}
+
+.selected-file {
+    min-height: 20px;
+    font-size: 14px;
+    color: #2563eb !important;
+    margin-bottom: 20px !important;
+}
+
 #fileInput {
-    margin-bottom: 20px;
+    display: none;
 }
 
 button {
@@ -128,6 +148,10 @@ button:hover {
 button:disabled {
     background: #94a3b8;
     cursor: not-allowed;
+}
+
+#analyzeButton {
+    margin-top: 5px;
 }
 
 .loading {
@@ -164,6 +188,7 @@ button:disabled {
 .card .value {
     font-size: 25px;
     font-weight: bold;
+    overflow-wrap: anywhere;
 }
 
 .probability-value {
